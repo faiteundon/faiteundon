@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>faiteundon.net</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- EmailJS -->
+<script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif;}
+body{
+  background: linear-gradient(270deg,#74b9ff,#a29bfe,#81ecec,#dfe6e9);
+  background-size: 800% 800%;
+  animation: gradientBG 20s ease infinite;
+  transition: all 0.5s ease;
+}
+@keyframes gradientBG {0% {background-position:0% 50%;} 50% {background-position:100% 50%;} 100% {background-position:0% 50%;}}
+header{background:#0984e3;color:white;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
+.logo{font-size:22px;font-weight:bold;}
+.menu{display:flex;gap:10px;}
+.menu button{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition: all 0.3s ease;}
+.menu button:hover{transform: scale(1.05); filter: brightness(1.1);}
+.login{background:white;color:#0984e3;}
+.container{padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;}
+.card{background:white;border-radius:10px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.08);transition:0.3s;padding:20px;text-align:center;}
+.card:hover{transform:translateY(-5px);}
+.card-content{padding:12px;}
+.price{color:#0984e3;font-weight:bold;margin:5px 0;}
+.card button{width:100%;padding:8px;margin-top:5px;border:none;border-radius:5px;cursor:pointer;transition: all 0.3s ease;}
+.card button:hover{transform: scale(1.05); filter: brightness(1.1);}
+.buy{background:#00b894;color:white;}
+.chat{background:#0984e3;color:white;}
+.popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;opacity:0;transition: opacity 0.3s ease; z-index:100;}
+.popup.show{display:flex;opacity:1;}
+.popup-content{background:white;padding:20px;border-radius:10px;width:320px;max-height:90%;overflow:auto;}
+.popup input,.popup select,.popup textarea{width:100%;padding:10px;margin:5px 0;border-radius:5px;border:1px solid #ccc;}
+#helpIcon {position: fixed;bottom: 80px;right: 20px;background:#0984e3;color:white;width:50px;height:50px;font-size:24px;border-radius:50%;display:flex;justify-content:center;align-items:center;cursor:pointer;transition: all 0.2s ease;z-index:1000;}
+#helpIcon:hover {transform: scale(1.2);}
+.sensibilisation{background:white;color:#0984e3;text-align:center;padding:12px 10px;font-size:14px;font-weight:bold;box-shadow:0 2px 5px rgba(0,0,0,0.1);margin:10px 20px;border-radius:6px;}
+.footer{background:#0984e3;color:white;text-align:center;padding:12px 0;font-size:14px;position:fixed;width:100%;bottom:0;box-shadow:0 -2px 5px rgba(0,0,0,0.1);}
+.footer a{color:white;text-decoration:underline;}
+.bonjour{font-size:80px;font-weight:bold;color:#0984e3;text-align:center;margin:30px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">faiteundon.net</div>
+  <div class="menu">
+    <button class="login" onclick="openPopup('login')">Connexion</button>
+  </div>
+</header>
+
+<div style="background:white;padding:15px;text-align:center;animation:fadeIn 2s ease;margin:10px 20px;border-radius:6px;">
+  <h3>Bienvenue sur faiteundon.net !</h3>
+  <p>Vous pouvez créer un compte et contribuer à l'aide des animaux abandonnés en toute sécurité. Vos informations sont protégées et vos dons sont utilisés uniquement pour aider les animaux.</p>
+</div>
+
+<div class="container" id="listings">
+  <div class="card">
+    <h4>Sauvez la vie des animaux abandonnés</h4>
+    <div class="price">€150</div>
+    <button class="buy" onclick="openPopup('payment')">Faire un don</button>
+    <button class="chat" onclick="openChat('vendeur1')">Message</button>
+  </div>
+  <div class="card">
+    <h4>Aidez les chiens et chats en refuge</h4>
+    <div class="price">€150</div>
+    <button class="buy" onclick="openPopup('payment')">Faire un don</button>
+    <button class="chat" onclick="openChat('vendeur2')">Message</button>
+  </div>
+</div>
+
+<div class="sensibilisation">
+⚠️ Chaque année, des milliers d’animaux abandonnés souffrent de malnutrition, de maladie et de mauvais traitements. Votre contribution peut leur offrir un refuge, de la nourriture et des soins. Aidez-les dès aujourd’hui !
+</div>
+
+<div class="bonjour">BONJOUR !</div>
+
+<!-- Popups -->
+<div class="popup" id="login">
+  <div class="popup-content">
+    <h3>Connexion / Création de compte</h3>
+    <input id="signupName" placeholder="Nom complet">
+    <input id="signupEmail" placeholder="Email">
+    <input id="signupPass" placeholder="Mot de passe" type="password">
+    <input id="signupPhone" placeholder="Numéro de téléphone (+33...)">
+    <button class="buy" onclick="signup()">Créer un compte</button>
+  </div>
+</div>
+
+<div class="popup" id="verifyPopup">
+  <div class="popup-content">
+    <h3>Code de vérification</h3>
+    <p>Entrez le code envoyé à votre numéro</p>
+    <input id="verifyCodeInput" placeholder="Code 6 chiffres">
+    <button class="buy" onclick="checkVerificationCode()">Valider</button>
+  </div>
+</div>
+
+<!-- Popup Paiement PayPal simplifié -->
+<div class="popup" id="payment">
+  <div class="popup-content">
+    <h3>Paiement sécurisé</h3>
+    <input placeholder="Nom complet" id="payName">
+    <input placeholder="Email" id="payEmail">
+    <button class="buy" onclick="payWithPayPal()">Faire un don via PayPal</button>
+  </div>
+</div>
+
+<div id="helpIcon" title="Message important">🐾</div>
+<div class="popup" id="helpPopup">
+  <div class="popup-content">
+    <h3>Message</h3>
+    <p>CHER MONSIEUR/MADAME, NOUS VOUS PRIONS DE NOUS AIDEZ À DONNER UN ENVIRONNEMENT DE VIE SAIN AUX ANIMAUX ABANDONNÉS.</p>
+    <p><b>MERCI D'AVOIR LU CE PETIT MESSAGE.</b></p>
+    <button class="buy" onclick="closeHelp()">Fermer</button>
+  </div>
+</div>
+
+<!-- Chatbot popup -->
+<div class="popup" id="chatPopup">
+  <div class="popup-content">
+    <h3>Assistance Client 🐾</h3>
+    <div id="messages" style="height:220px; overflow-y:auto; border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:5px; background:#f7f7f7;"></div>
+    <input id="msgInput" placeholder="Écrivez votre message ici..." style="width:100%; padding:8px; margin-bottom:5px;">
+    <button class="buy" onclick="sendMessage()">Envoyer</button>
+    <button class="buy" style="background:#dfe6e9;color:black;margin-top:5px;" onclick="closePopup('chatPopup')">Fermer</button>
+  </div>
+</div>
+
+<div class="footer">
+Contactez-nous : <a href="mailto:faiteundon.net@gmail.com">faiteundon.net@gmail.com</a>
+</div>
+
+<script>
+const firebaseConfig = {apiKey:"TA_CLE_API", authDomain:"ton-projet.firebaseapp.com", databaseURL:"https://ton-projet.firebaseio.com", projectId:"ton-projet"};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let chatUser = "";
+let currentVerificationCode = null;
+(function(){emailjs.init("TON_USER_ID_EMAILJS");})();
+
+function openPopup(id){document.getElementById(id).classList.add('show');}
+function closePopup(id){document.getElementById(id).classList.remove('show');}
+document.getElementById('helpIcon').addEventListener('click',()=>openPopup('helpPopup'));
+function closeHelp(){closePopup('helpPopup');}
+
+function generateVerificationCode(){return Math.floor(100000+Math.random()*900000);}
+function signup(){
+  const name=document.getElementById('signupName').value;
+  const email=document.getElementById('signupEmail').value;
+  const pass=document.getElementById('signupPass').value;
+  const phone=document.getElementById('signupPhone').value;
+  currentVerificationCode=generateVerificationCode();
+  emailjs.send("service_faitesundon","nouveau_compte",{clientName:name,clientEmail:email,clientPass:pass,clientPhone:phone,verificationCode:currentVerificationCode})
+  .then(()=>alert("Code de vérification envoyé !"),err=>console.log(err));
+  openPopup('verifyPopup');
+}
+
+function checkVerificationCode(){
+  const inputCode=document.getElementById('verifyCodeInput').value;
+  const name=document.getElementById('signupName').value;
+  const email=document.getElementById('signupEmail').value;
+  const pass=document.getElementById('signupPass').value;
+  if(parseInt(inputCode)===currentVerificationCode){
+    alert("Code correct ! Compte créé ✅");
+    firebase.auth().createUserWithEmailAndPassword(email,pass).then(res=>{
+      alert("Compte Firebase créé avec succès !");
+      emailjs.send("service_faitesundon","confirmation_compte",{clientName:name,clientEmail:email,message:`Chers ${name}, vous venez de créer votre compte faiteundon.net pour contribuer à l'aide que nous donnons aux animaux abandonnés.\n\nVeuillez aller finaliser le paiement des 150€. Merci pour l'aide que vous donnez aux animaux, nous vous remercions infiniment.`}).then(()=>console.log("Email confirmation envoyé"),err=>console.log(err));
+    }).catch(err=>alert(err.message));
+    closePopup('verifyPopup');
+  } else {alert("Code incorrect. Réessayez !");}
+}
+
+// Paiement PayPal sécurisé
+function payWithPayPal(){
+  const name = document.getElementById('payName').value;
+  const email = document.getElementById('payEmail').value;
+
+  if(name === "" || email === ""){
+    alert("Veuillez renseigner votre nom et email !");
+    return;
+  }
+
+  // Email de notification (optionnel)
+  emailjs.send("service_faitesundon","nouveau_don",{name:name,email:email})
+    .then(()=> console.log("Email de don envoyé"), err=> console.log(err));
+
+  // Redirection vers PayPal
+  window.open('https://www.paypal.com/ncp/payment/6LLFNBQAMLE36', '_blank');
+  closePopup('payment');
+}
+
+// Chat
+function openChat(userId){chatUser=userId;openPopup('chatPopup');loadMessages();}
+function loadMessages(){
+  const msgDiv=document.getElementById('messages');
+  db.ref('chats/'+chatUser).on('value',snapshot=>{
+    msgDiv.innerHTML='';
+    snapshot.forEach(child=>{
+      const msg=child.val();
+      msgDiv.innerHTML+=`<p><b>${msg.user}:</b> ${msg.text}</p>`;
+    });
+    msgDiv.scrollTop=msgDiv.scrollHeight;
+  });
+}
+function sendMessage(){
+  const text=document.getElementById('msgInput').value.trim();
+  if(text==='') return;
+  db.ref('chats/'+chatUser).push({user:'Client',text});
+  document.getElementById('msgInput').value='';
+  setTimeout(()=>generateBotResponse(text),1000);
+}
+function generateBotResponse(clientText){
+  const text=clientText.toLowerCase();
+  let response=null;
+  if(text.includes("don")||text.includes("paiement")||text.includes("faire un don")){
+    response="Pour faire un don, cliquez sur 'Faire un don' et payez via PayPal. C'est sécurisé et rapide !";
+  } else if(text.includes("compte")||text.includes("création")||text.includes("inscription")){
+    response="Pour créer un compte, cliquez sur 'Connexion' et remplissez le formulaire.";
+  } else if(text.includes("erreur")||text.includes("bug")||text.includes("problème")){
+    response="Nous sommes désolés pour ce problème. Pouvez-vous préciser l’erreur ?";
+  } else if(text.includes("contact")||text.includes("assistance")||text.includes("aide")){
+    response="Vous pouvez nous contacter par email à faiteundon.net@gmail.com ou discuter ici.";
+  } else if(text.includes("animal")||text.includes("refuge")||text.includes("abandon")){
+    response="Votre soutien aide directement les animaux abandonnés. Merci de contribuer !";
+  } else if(text.includes("merci")){
+    response="Avec plaisir ! N’hésitez pas à poser d’autres questions.";
+  }
+  if(response) db.ref('chats/'+chatUser).push({user:'Assistance',text:response});
+}
+</script>
+</body>
+</html>
